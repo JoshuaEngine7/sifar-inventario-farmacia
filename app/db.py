@@ -1,9 +1,13 @@
+import os
 from pathlib import Path
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DB_PATH = Path(__file__).resolve().parent.parent / "farmacia.db"
+# SIFAR_DB permite mover la BD fuera de la carpeta del código (p.ej. demo en la
+# nube: /tmp evita los locks de WAL sobre un share de red). Sin la variable,
+# comportamiento de siempre: farmacia.db junto al código.
+DB_PATH = Path(os.environ.get("SIFAR_DB") or Path(__file__).resolve().parent.parent / "farmacia.db")
 
 engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
 
