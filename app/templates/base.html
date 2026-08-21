@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}SIFAR{% endblock %} — SIFAR</title>
+<script>
+  // Aplica el tema guardado ANTES de pintar, para que no haya parpadeo blanco.
+  (function(){ try { var t = localStorage.getItem("tema");
+    if (t) document.documentElement.setAttribute("data-tema", t); } catch(e){} })();
+</script>
+<style>
+  :root {
+    --fondo: #f4f6f8; --superficie: #ffffff; --superficie2: #eef2f6;
+    --texto: #222222; --texto-suave: #5a6670; --borde: #d5dbe1;
+    --titulo: #1f4e79; --acento: #1f4e79;
+    --header-bg: #1f4e79; --header-tx: #ffffff; --nav: #dce7f3;
+  }
+  :root[data-tema="oscuro"] {
+    --fondo: #12161b; --superficie: #1b222b; --superficie2: #232d38;
+    --texto: #e6e9ee; --texto-suave: #9aa6b2; --borde: #333f4b;
+    --titulo: #8fb8e6; --acento: #2f6fb0;
+    --header-bg: #16202b; --header-tx: #eef4fb; --nav: #b9c9dc;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; background: var(--fondo); color: var(--texto); }
+  header { background: var(--header-bg); color: var(--header-tx); padding: 0.6rem 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  header h1 { font-size: 1.05rem; margin: 0; }
+  nav { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+  nav a { color: var(--nav); text-decoration: none; padding: 0.35rem 0.7rem; border-radius: 4px; }
+  nav a:hover, nav a.activo { background: rgba(255,255,255,0.18); color: var(--header-tx); }
+  .usuario { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
+  .tema-btn { background: rgba(255,255,255,0.15); color: var(--header-tx); border: none; cursor: pointer;
+    padding: 0.35rem 0.55rem; border-radius: 5px; font-size: 1rem; line-height: 1; }
+  main { max-width: 1100px; margin: 1.2rem auto; padding: 0 1rem; }
+  .tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem; }
+  table { border-collapse: collapse; width: 100%; background: var(--superficie); }
+  th, td { border: 1px solid var(--borde); padding: 0.45rem 0.6rem; text-align: left; font-size: 0.92rem; }
+  th { background: var(--superficie2); }
+  tr:nth-child(even) td { background: var(--superficie2); }
+  a { color: var(--titulo); }
+  input, select, textarea { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--borde); border-radius: 5px;
+    background: var(--superficie); color: var(--texto); }
+  button, .btn { background: var(--acento); color: #fff; border: none; cursor: pointer;
+    padding: 0.45rem 0.6rem; border-radius: 5px; text-decoration: none; display: inline-block; }
+  button:hover, .btn:hover { filter: brightness(1.15); color: #fff; }
+  label { display: block; margin: 0.6rem 0 0.2rem; font-weight: 600; font-size: 0.9rem; }
+  .error { background: #fdecea; color: #b3261e; border: 1px solid #f5c6c2; padding: 0.6rem 0.8rem; border-radius: 6px; margin-bottom: 0.8rem; }
+  .ok { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; padding: 0.6rem 0.8rem; border-radius: 6px; margin-bottom: 0.8rem; }
+  /* Chips del semáforo: fondo pastel fijo + texto oscuro SIEMPRE (si no, en modo
+     oscuro el texto claro sobre pastel quedaría ilegible). */
+  .sem { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.8rem; font-weight: 600; color: #1a1a1a; }
+  .sem-VERDE { background: #c8e6c9; } .sem-PRONTO_A_AMARILLO { background: #e6eec9; }
+  .sem-AMARILLA { background: #fff3b0; } .sem-PRONTO_A_ROJO { background: #ffd9a8; }
+  .sem-ROJO { background: #ffb3ab; } .sem-VENCE_EN_1_MES { background: #ff8a80; }
+  .sem-CADUCO { background: #b0b0b0; color: #fff; }
+</style>
+</head>
+<body>
+{% if usuario %}
+<header>
+  <h1>{{ APP_NOMBRE }} <span style="font-weight:normal;font-size:0.8rem;opacity:0.85">{{ UNIDAD }}</span></h1>
+  <nav>
+    <a href="/inventario">Inventario</a>
+    <a href="/captura">Captura</a>
+    <a href="/historial">Historial</a>
+    <a href="/alertas">Alertas</a>
+    <a href="/reporte">Reporte</a>
+    {% if usuario.rol == 'admin' %}<a href="/usuarios">Usuarios</a>{% endif %}
+  </nav>
+  <div class="usuario">
+    <button type="button" class="tema-btn" id="tema-btn" onclick="alternarTema()"
+            title="Cambiar tema claro/oscuro">🌙</button>
+    <span>{{ usuario.nombre }}</span>
+    <form method="post" action="/logout" style="margin:0"><button>Salir</button></form>
+  </div>
+</header>
+{% else %}
+<button type="button" class="tema-btn" id="tema-btn" onclick="alternarTema()" title="Cambiar tema"
+        style="position:fixed;top:0.8rem;right:0.8rem;background:var(--acento);z-index:50">🌙</button>
+{% endif %}
+<script>
+  function iconoTema() {
+    var b = document.getElementById("tema-btn");
+    if (b) b.textContent = document.documentElement.getAttribute("data-tema") === "oscuro" ? "☀️" : "🌙";
+  }
+  function alternarTema() {
+    var r = document.documentElement;
+    var nuevo = r.getAttribute("data-tema") === "oscuro" ? "claro" : "oscuro";
+    r.setAttribute("data-tema", nuevo);
+    try { localStorage.setItem("tema", nuevo); } catch(e){}
+    iconoTema();
+  }
+  iconoTema();
+</script>
+<main>
+{% block contenido %}{% endblock %}
+</main>
+{% if usuario %}
+<div id="aviso-inactividad" style="display:none;position:fixed;bottom:1rem;right:1rem;
+  background:#b3261e;color:#fff;padding:0.8rem 1.2rem;border-radius:8px;z-index:99;
+  box-shadow:0 2px 10px rgba(0,0,0,0.3)">
+  ⚠ La sesión se cerrará por inactividad en menos de 1 minuto.<br>
+  Mueva el mouse o presione una tecla para continuar.
+</div>
+<script>
+// Cierre de sesión por inactividad (requisito clínico): actividad = mouse,
+// teclado, clic, scroll o toque. Leer la pantalla desplazándose cuenta;
+// abandonar la computadora, no. Al vencer, la pantalla se REDIRIGE al login
+// (no basta invalidar la sesión: los datos seguirían visibles).
+const LIMITE_MS = {{ minutos_inactividad() }} * 60000;
+const aviso = document.getElementById("aviso-inactividad");
+let ultimaActividad = Date.now();
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach(ev =>
+  addEventListener(ev, () => { ultimaActividad = Date.now(); aviso.style.display = "none"; },
+                   { passive: true }));
+setInterval(() => {
+  const inactivo = Date.now() - ultimaActividad;
+  if (inactivo >= LIMITE_MS) location.href = "/logout-inactividad";
+  else if (inactivo >= LIMITE_MS - 60000) aviso.style.display = "block";
+}, 5000);
+// Mantiene viva la sesión del servidor mientras haya actividad real sin navegar.
+setInterval(() => {
+  if (Date.now() - ultimaActividad < 240000) fetch("/ping", { method: "POST" });
+}, 240000);
+</script>
+{% endif %}
+</body>
+</html>

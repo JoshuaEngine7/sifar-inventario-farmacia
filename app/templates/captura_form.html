@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Capturar — {{ producto.nombre }}{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <p style="margin:0 0 0.4rem"><a href="/captura">← buscar otro producto</a>
+  <span style="float:right"><a href="/historial?producto_id={{ producto.id }}">Ver historial</a>
+  &nbsp;·&nbsp; <a href="/traslado/{{ producto.id }}">Trasladar a otra área →</a></span></p>
+  <h2 style="margin:0">{{ producto.nombre }}</h2>
+  <p style="color:var(--texto-suave);margin:0.3rem 0 0">
+    {{ producto.tipo.nombre }} · {{ producto.ubicacion.nombre }} · unidad: {{ producto.unidad }}
+    {% if producto.piezas_por_caja %} · {{ producto.piezas_por_caja }} piezas por caja{% endif %}
+  </p>
+  <p style="font-size:1.15rem;margin:0.6rem 0 0"><strong>Stock actual: {{ stock }} piezas</strong></p>
+
+  {% if lotes_con_existencia %}
+  <h3>Lotes (cajas por caducidad)</h3>
+  <table style="max-width:560px">
+    <tr><th>Caducidad</th><th>Cajas</th><th>Semáforo</th></tr>
+    {% for l in lotes_con_existencia %}
+    {% set cat = semaforo(l.fecha_caducidad, hoy) %}
+    <tr>
+      <td>{{ l.fecha_caducidad }}</td>
+      <td>{{ l.cajas }}</td>
+      <td><span class="sem sem-{{ cat }}">{{ etiquetas[cat] }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div class="tarjeta" style="max-width:560px">
+  <h3 style="margin-top:0">Registrar movimiento</h3>
+  {% if mensaje %}<div class="ok">{{ mensaje }}</div>{% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="/captura/{{ producto.id }}">
+    <label>Tipo de movimiento</label>
+    <select name="tipo" style="width:100%">
+      <option>ENTRADA</option>
+      <option>SALIDA</option>
+      <option>AJUSTE</option>
+      <option>BAJA_CADUCIDAD</option>
+    </select>
+
+    {% if producto.unidad == 'pieza' %}
+    <label>Piezas</label>
+    <input type="number" name="piezas" id="piezas" value="0"
+           style="width:100%">
+    {% endif %}
+
+    <label>Cajas <span style="font-weight:normal;color:var(--texto-suave)">(en AJUSTE puede ser negativa para corregir un lote)</span></label>
+    <input type="number" name="cajas" id="cajas" value="0" style="width:100%"
+           data-ppc="{{ producto.piezas_por_caja or '' }}">
+
+    <label>Lote (para salidas/bajas de cajas) — preseleccionado el que caduca primero (FEFO)</label>
+    <select name="lote_id" style="width:100%">
+      <option value="">— sin lote —</option>
+      {% for l in lotes %}
+      <option value="{{ l.id }}" {% if l.id == fefo_id %}selected{% endif %}>
+        {{ l.fecha_caducidad }} · {{ l.cajas }} cajas{% if l.cajas == 0 %} (vacío){% endif %} · {{ etiquetas[semaforo(l.fecha_caducidad, hoy)] }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <label>Fecha de caducidad (solo ENTRADA de cajas: crea/suma al lote)</label>
+    <input type="date" name="fecha_caducidad" style="width:100%">
+
+    <label>Causa</label>
+    <select name="causa_id" style="width:100%">
+      <option value="">— sin causa —</option>
+      {% for c in causas %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}
+    </select>
+
+    <label>Detalle (opcional)</label>
+    <input name="causa_detalle" style="width:100%">
+
+    <label>Paciente (opcional)</label>
+    <input name="paciente_ref" style="width:100%" placeholder="Nombre del paciente">
+
+    <button style="margin-top:1rem;width:100%">Registrar</button>
+  </form>
+</div>
+
+<script>
+// Sugerencia cajas → piezas (editable): solo si el producto tiene piezas_por_caja
+// y el usuario no ha escrito piezas a mano.
+const cajas = document.getElementById("cajas");
+const piezas = document.getElementById("piezas");
+if (cajas && piezas && cajas.dataset.ppc) {
+  let manual = false;
+  piezas.addEventListener("input", () => { manual = true; });
+  cajas.addEventListener("input", () => {
+    if (!manual) piezas.value = (parseInt(cajas.value, 10) || 0) * parseInt(cajas.dataset.ppc, 10);
+  });
+}
+</script>
+{% endblock %}

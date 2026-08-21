@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Historial{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Historial de movimientos</h2>
+  <p style="color:var(--texto-suave);margin-top:-0.4rem">Quién registró cada movimiento, cuándo, con su causa
+  y paciente. Para control interno del consultorio.</p>
+  <form method="get" action="/historial" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:end">
+    <div style="flex:1;min-width:180px"><label>Producto</label>
+      <input name="q" value="{{ q }}" placeholder="Nombre del producto" style="width:100%"></div>
+    <div><label>Tipo</label>
+      <select name="tipo">
+        <option value="">Todos</option>
+        {% for t in tipos %}<option value="{{ t }}" {% if tipo == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select></div>
+    <div><label>Desde</label><input type="date" name="desde" value="{{ desde }}"></div>
+    <div><label>Hasta</label><input type="date" name="hasta" value="{{ hasta }}"></div>
+    {% if producto_id %}<input type="hidden" name="producto_id" id="producto_id" value="{{ producto_id }}">{% endif %}
+    <button>Filtrar</button>
+    <!-- Botón de submit con formaction: el navegador codifica y envía los valores
+         VIGENTES del formulario (un link armado a mano exportaba los filtros viejos
+         y se rompía con productos que traen '#' en el nombre). -->
+    <button formaction="/historial/export">Descargar Excel (uso interno)</button>
+  </form>
+  <p style="color:var(--texto-suave);font-size:0.85rem;margin-bottom:0">
+    {{ total }} movimientos encontrados{% if total > limite %} — se muestran los {{ limite }} más
+    recientes (usa los filtros o el Excel para ver todos){% endif %}.
+    {% if producto_fijado %}
+    <span style="background:var(--superficie2);border-radius:10px;padding:0.1rem 0.6rem">
+      Producto fijado: <strong>{{ producto_fijado.nombre }}</strong>
+      <a href="/historial">✕ quitar</a></span>
+    {% endif %}
+    · El Excel de esta pantalla <strong>sí incluye pacientes</strong>: es para control interno,
+    no para entregar a certificaciones (para eso está el menú Reporte).
+  </p>
+</div>
+{% if producto_id %}
+<script>
+// Si el usuario teclea otro nombre de producto, soltar el producto fijado:
+// combinarlos daría "0 resultados" sin explicación.
+document.querySelector('input[name="q"]').addEventListener("input", () => {
+  const fijo = document.getElementById("producto_id");
+  if (fijo) fijo.remove();
+});
+</script>
+{% endif %}
+
+<table>
+  <tr>
+    <th>Fecha y hora</th><th>Producto</th><th>Tipo</th><th>Piezas</th><th>Cajas</th>
+    <th>Caducidad</th><th>Causa</th><th>Paciente</th><th>Registró</th>
+  </tr>
+  {% for m in filas %}
+  <tr>
+    <td style="white-space:nowrap">{{ m.fecha_hora.strftime("%d/%m/%Y %H:%M") }}
+      {% if m.historico %}<span style="font-size:0.72rem;background:var(--superficie2);border-radius:8px;padding:0.05rem 0.4rem">Excel</span>{% endif %}</td>
+    <td>{{ m.producto.nombre }}<br>
+      <span style="color:var(--texto-suave);font-size:0.8rem">{{ m.producto.ubicacion.nombre }}</span></td>
+    <td>{{ m.tipo }}</td>
+    <td style="text-align:right">{{ m.piezas if m.piezas else "" }}</td>
+    <td style="text-align:right">{{ m.cajas if m.cajas else "" }}</td>
+    <td>{{ m.fecha_caducidad.strftime("%d/%m/%Y") if m.fecha_caducidad else "" }}</td>
+    <td>{{ m.causa.nombre if m.causa else "" }}
+      {% if m.causa_detalle %}<br><span style="color:var(--texto-suave);font-size:0.8rem">{{ m.causa_detalle }}</span>{% endif %}</td>
+    <td>{{ m.paciente_ref or "" }}</td>
+    <td>{{ m.usuario.nombre }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

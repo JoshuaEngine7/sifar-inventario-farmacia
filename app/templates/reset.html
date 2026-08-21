@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Poner inventario en cero{% endblock %}
+{% block contenido %}
+
+{% if resultado %}
+<div class="tarjeta">
+  {% if resultado.residuos %}
+  <div class="error">
+    <strong>El reset no terminó completo.</strong> Quedaron
+    {{ resultado.residuos|length }} cosas sin poner en cero. Vuelva a intentarlo
+    o avise a soporte. Se guardó un respaldo previo: {{ resultado.respaldo }}
+  </div>
+  <ul>{% for r in resultado.residuos[:20] %}<li>{{ r }}</li>{% endfor %}</ul>
+  {% else %}
+  <div class="ok">
+    <strong>Listo: todo el inventario quedó en cero.</strong><br>
+    Se registraron {{ resultado.ajustes }} ajustes auditados y se guardó un
+    respaldo previo ({{ resultado.respaldo }}) por si hiciera falta volver atrás.
+  </div>
+  <p>Ya puede empezar a capturar las existencias reales: menú
+  <a href="/captura">Captura</a> → buscar el producto → <strong>ENTRADA</strong>
+  con las piezas, cajas y fecha de caducidad que tenga físicamente.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="tarjeta">
+  <h2 style="margin-top:0">Poner todo el inventario en cero</h2>
+  <p style="color:var(--texto-suave)">Para arrancar limpio y capturar las existencias
+  reales desde cero, sin ir producto por producto.</p>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  {% if previo %}
+  <div class="error">
+    <strong>Atención:</strong> ya se puso el inventario en cero el
+    {{ previo.fecha_hora.strftime("%d/%m/%Y a las %H:%M") }}.
+    Si el personal ya capturó existencias reales después de esa fecha,
+    <strong>volver a hacerlo las borraría</strong>.
+  </div>
+  {% endif %}
+
+  <table style="max-width:620px">
+    <tr><th>Qué se conserva</th><th>Qué se pone en cero</th></tr>
+    <tr>
+      <td>
+        Usuarios, contraseñas y permisos<br>
+        Los productos del catálogo<br>
+        Todo el historial de movimientos
+      </td>
+      <td>
+        <strong>{{ n_piezas }}</strong> productos con existencia
+        ({{ total_piezas }} piezas)<br>
+        <strong>{{ n_lotes }}</strong> lotes con cajas
+        ({{ total_cajas }} cajas)
+      </td>
+    </tr>
+  </table>
+
+  {% if ejemplos %}
+  <h3>Ejemplos de lo que cambiaría</h3>
+  <table style="max-width:620px">
+    <tr><th>Producto</th><th>Ahora</th><th>Quedaría</th></tr>
+    {% for producto, cantidad in ejemplos %}
+    <tr><td>{{ producto.nombre }}</td><td style="text-align:right">{{ cantidad }}</td><td>0</td></tr>
+    {% endfor %}
+  </table>
+  {% if n_piezas > 8 %}<p style="color:var(--texto-suave)">… y {{ n_piezas - 8 }} productos más.</p>{% endif %}
+  {% endif %}
+
+  <p style="color:var(--texto-suave);font-size:0.9rem">
+    No se borra nada: cada cambio queda registrado como un ajuste con su fecha y
+    responsable, y antes de aplicarlo se guarda un respaldo automático.
+    Conviene hacerlo cuando nadie esté capturando.</p>
+</div>
+
+{% if n_piezas or n_lotes %}
+<div class="tarjeta" style="max-width:620px;border-color:#b3261e">
+  <h3 style="margin-top:0;color:#b3261e">Confirmar</h3>
+  <form method="post" action="/mantenimiento/reset">
+    <label>Para continuar, escriba <strong>{{ confirmacion }}</strong> en el recuadro:</label>
+    <input name="confirmacion" autocomplete="off" style="width:100%"
+           placeholder="{{ confirmacion }}">
+    {% if previo %}
+    <label style="font-weight:normal;margin-top:0.8rem">
+      <input type="checkbox" name="entiendo_reset_previo" value="si">
+      Entiendo que ya se puso el inventario en cero antes y que
+      <strong>se borrarán las existencias capturadas desde entonces</strong>.
+    </label>
+    {% endif %}
+    <button style="margin-top:1rem;background:#b3261e">Poner todo el inventario en cero</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

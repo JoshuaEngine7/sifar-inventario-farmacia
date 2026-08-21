@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Reporte{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Reporte por periodo</h2>
+  <form method="get" action="/reporte" style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:end">
+    <div><label>Desde</label><input type="date" name="desde" value="{{ desde }}"></div>
+    <div><label>Hasta</label><input type="date" name="hasta" value="{{ hasta }}"></div>
+    <div><label style="font-weight:normal"><input type="checkbox" name="solo_mov" value="1"
+      {% if solo_mov %}checked{% endif %}> Solo productos con movimientos</label></div>
+    <button>Generar</button>
+    <button formaction="/reporte/export">Descargar Excel</button>
+  </form>
+  <p style="color:var(--texto-suave)">Stock final = stock inicial + entradas − salidas + ajustes.
+  Este Excel <strong>no incluye datos de pacientes</strong>: es el formato para entregar a
+  certificaciones. Para control interno (quién registró qué y a qué paciente), usar el menú
+  <a href="/historial">Historial</a>.</p>
+</div>
+
+<table>
+  <tr><th>Producto</th><th>Ubicación</th><th>Stock inicial</th>
+      <th>Entradas</th><th>Salidas</th><th>Ajustes</th><th>Stock final</th></tr>
+  {% for f in filas %}
+  <tr>
+    <td>{{ f.p.nombre }}</td>
+    <td>{{ f.p.ubicacion.nombre }}</td>
+    <td style="text-align:right">{{ f.inicial }}</td>
+    <td style="text-align:right">{{ f.entradas }}</td>
+    <td style="text-align:right">{{ f.salidas }}</td>
+    <td style="text-align:right">{{ f.ajustes }}</td>
+    <td style="text-align:right"><strong>{{ f.final }}</strong></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

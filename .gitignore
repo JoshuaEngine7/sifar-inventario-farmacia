@@ -1,0 +1,12 @@
+# entorno y artefactos locales
+.venv/
+__pycache__/
+*.pyc
+*.log
+
+# datos: la BD nunca se versiona (se genera con app.demo_data o app.migrate)
+farmacia.db*
+.secret_key
+migracion_revision.txt
+actualizacion_reporte.txt
+respaldo/

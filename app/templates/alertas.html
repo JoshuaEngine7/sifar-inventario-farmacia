@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Alertas{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Alertas de caducidad</h2>
+  <p><strong>{{ caducos|length }}</strong> lotes caducos con cajas ·
+     <strong>{{ proximos|length }}</strong> lotes vencen en ≤{{ dias }} días ·
+     <strong>{{ descuadres|length }}</strong> descuadres piezas/cajas</p>
+</div>
+
+<div class="tarjeta">
+  <h3 style="margin-top:0">Lotes CADUCOS con cajas en existencia ({{ caducos|length }})</h3>
+  <p style="color:var(--texto-suave)">Dar de baja con movimiento BAJA_CADUCIDAD desde la captura del producto.</p>
+  <table>
+    <tr><th>Producto</th><th>Ubicación</th><th>Cajas</th><th>Caducó</th></tr>
+    {% for l in caducos %}
+    <tr>
+      <td><a href="/captura/{{ l.producto.id }}">{{ l.producto.nombre }}</a></td>
+      <td>{{ l.producto.ubicacion.nombre }}</td>
+      <td style="text-align:right">{{ l.cajas }}</td>
+      <td>{{ l.fecha_caducidad }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="tarjeta">
+  <h3 style="margin-top:0">Vencen en ≤{{ dias }} días ({{ proximos|length }})</h3>
+  <table>
+    <tr><th>Producto</th><th>Ubicación</th><th>Cajas</th><th>Vence</th><th>Semáforo</th></tr>
+    {% for l in proximos %}
+    {% set cat = semaforo(l.fecha_caducidad, hoy) %}
+    <tr>
+      <td><a href="/captura/{{ l.producto.id }}">{{ l.producto.nombre }}</a></td>
+      <td>{{ l.producto.ubicacion.nombre }}</td>
+      <td style="text-align:right">{{ l.cajas }}</td>
+      <td>{{ l.fecha_caducidad }}</td>
+      <td><span class="sem sem-{{ cat }}">{{ etiquetas[cat] }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="tarjeta">
+  <h3 style="margin-top:0">Descuadres piezas vs cajas ({{ descuadres|length }})</h3>
+  <p style="color:var(--texto-suave)">Informativo, no bloquea: el conteo de piezas no corresponde con las
+  cajas registradas y sus piezas por caja. Corregir con AJUSTE si procede.</p>
+  <table>
+    <tr><th>Producto</th><th>Piezas</th><th>Cajas</th><th>Piezas/caja</th><th>Esperado</th></tr>
+    {% for d in descuadres %}
+    <tr>
+      <td><a href="/captura/{{ d.p.id }}">{{ d.p.nombre }}</a></td>
+      <td style="text-align:right">{{ d.piezas }}</td>
+      <td style="text-align:right">{{ d.cajas }}</td>
+      <td style="text-align:right">{{ d.p.piezas_por_caja }}</td>
+      <td>{{ d.esperado }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

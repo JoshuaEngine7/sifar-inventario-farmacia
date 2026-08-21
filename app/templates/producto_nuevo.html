@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Agregar producto{% endblock %}
+{% block contenido %}
+<div class="tarjeta" style="max-width:560px">
+  <h2 style="margin-top:0">Agregar producto nuevo</h2>
+  <p style="color:var(--texto-suave)">Para medicamentos o material que llegan por primera vez.
+  Después de crearlo se registra su ENTRADA con cajas y caducidad.</p>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/productos/nuevo">
+    <label>Nombre completo del producto</label>
+    <input name="nombre" required style="width:100%" value="{{ valores.nombre or '' }}"
+           placeholder="Ej. PARACETAMOL TABLETAS 500MG C/10 TABLETAS">
+    <p style="font-size:0.85rem;color:var(--texto-suave);margin:0.2rem 0 0">Incluir presentación y contenido
+    (ej. "C/10 TABLETAS") como en el resto del catálogo.</p>
+
+    <label>Tipo</label>
+    <select name="tipo_id" required style="width:100%">
+      <option value="">— elegir —</option>
+      {% for t in tipos %}<option value="{{ t.id }}" {% if valores.tipo_id == t.id|string %}selected{% endif %}>{{ t.nombre }}</option>{% endfor %}
+    </select>
+
+    <label>Ubicación</label>
+    <select name="ubicacion_id" required style="width:100%">
+      <option value="">— elegir —</option>
+      {% for u in ubicaciones %}<option value="{{ u.id }}" {% if valores.ubicacion_id == u.id|string %}selected{% endif %}>{{ u.nombre }}</option>{% endfor %}
+    </select>
+
+    <label>Unidad de control</label>
+    <select name="unidad" style="width:100%">
+      <option value="pieza" {% if valores.unidad != 'caja' %}selected{% endif %}>Pieza (pastillas/piezas + cajas)</option>
+      <option value="caja" {% if valores.unidad == 'caja' %}selected{% endif %}>Caja completa (líquidos e insumos)</option>
+    </select>
+
+    <label>Piezas por caja (opcional)</label>
+    <input name="piezas_por_caja" style="width:100%" value="{{ valores.piezas_por_caja or '' }}"
+           placeholder="Ej. 10 — sirve para pre-llenar y detectar descuadres">
+
+    <button style="margin-top:1rem;width:100%">Crear producto</button>
+  </form>
+</div>
+{% endblock %}

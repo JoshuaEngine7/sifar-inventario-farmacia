@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Trasladar — {{ producto.nombre }}{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <p style="margin:0 0 0.4rem"><a href="/captura/{{ producto.id }}">← volver a captura</a></p>
+  <h2 style="margin:0">Trasladar a otra área</h2>
+  <p style="color:var(--texto-suave);margin:0.3rem 0 0">{{ producto.nombre }} — actualmente en
+  <strong>{{ producto.ubicacion.nombre }}</strong> · stock: {{ stock }} piezas</p>
+  <p style="color:var(--texto-suave);font-size:0.9rem">Registra la salida de esta área y la entrada en la
+  otra en un solo paso, ligadas y con el mismo lote. Si el producto no existe en el área
+  destino, se crea ahí automáticamente.</p>
+</div>
+
+<div class="tarjeta" style="max-width:560px">
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/traslado/{{ producto.id }}">
+    <label>Área destino</label>
+    <select name="ubicacion_destino_id" required style="width:100%">
+      <option value="">— elegir —</option>
+      {% for u in destinos %}<option value="{{ u.id }}">{{ u.nombre }}</option>{% endfor %}
+    </select>
+
+    {% if producto.unidad == 'pieza' %}
+    <label>Piezas a trasladar</label>
+    <input type="number" name="piezas" value="0" style="width:100%">
+    {% endif %}
+
+    <label>Cajas a trasladar</label>
+    <input type="number" name="cajas" value="0" min="0" style="width:100%">
+
+    <label>Lote del que salen las cajas (preseleccionado FEFO)</label>
+    <select name="lote_id" style="width:100%">
+      <option value="">— sin lote (solo piezas) —</option>
+      {% for l in lotes %}
+      <option value="{{ l.id }}" {% if l.id == fefo_id %}selected{% endif %}>
+        {{ l.fecha_caducidad }} · {{ l.cajas }} cajas · {{ etiquetas[semaforo(l.fecha_caducidad, hoy)] }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <button style="margin-top:1rem;width:100%">Trasladar</button>
+  </form>
+</div>
+{% endblock %}

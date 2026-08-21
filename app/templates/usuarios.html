@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Administración de usuarios</h2>
+  {% if mensaje %}<div class="ok">{{ mensaje }}</div>{% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <table>
+    <tr><th>Nombre</th><th>Rol</th><th>Estado</th><th>Alta de productos</th><th>Acciones</th></tr>
+    {% for u in usuarios %}
+    <tr>
+      <td>{{ u.nombre }}</td>
+      <td>
+        {% if u.id != usuario.id and u.nombre != 'Migración Excel' %}
+        <form method="post" action="/usuarios/{{ u.id }}/rol" style="display:flex;gap:0.3rem">
+          <select name="rol">
+            {% for r in roles %}<option value="{{ r }}" {% if u.rol == r %}selected{% endif %}>{{ r }}</option>{% endfor %}
+          </select>
+          <button>Cambiar</button>
+        </form>
+        {% else %}{{ u.rol }}{% endif %}
+      </td>
+      <td>{{ "Activo" if u.activo else "Inactivo" }}{% if u.debe_cambiar_password %} · debe cambiar contraseña{% endif %}</td>
+      <td style="white-space:nowrap">
+        {% if u.nombre == 'Migración Excel' %}—
+        {% elif u.rol == 'admin' %}Siempre (admin)
+        {% else %}
+        <form method="post" action="/usuarios/{{ u.id }}/permiso-productos" style="display:inline">
+          <button style="font-size:0.8rem;padding:0.2rem 0.5rem;background:{{ '#8a4a00' if u.puede_crear_productos else '#1b5e20' }}">
+            {{ "Quitar permiso" if u.puede_crear_productos else "Dar permiso" }}</button>
+        </form>
+        {{ "Sí" if u.puede_crear_productos else "No" }}
+        {% endif %}
+      </td>
+      <td style="white-space:nowrap">
+        {% if u.nombre != 'Migración Excel' %}
+        <form method="post" action="/usuarios/{{ u.id }}/reset" style="display:inline">
+          <button>Resetear contraseña</button>
+        </form>
+        {% if u.id != usuario.id %}
+        <form method="post" action="/usuarios/{{ u.id }}/toggle" style="display:inline">
+          <button>{{ "Desactivar" if u.activo else "Activar" }}</button>
+        </form>
+        {% endif %}
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="tarjeta" style="max-width:480px">
+  <h3 style="margin-top:0">Agregar usuario</h3>
+  <form method="post" action="/usuarios">
+    <label>Nombre completo</label>
+    <input name="nombre" required style="width:100%" placeholder="Dr(a). Nombre Apellidos">
+    <label>Rol</label>
+    <select name="rol" style="width:100%">
+      {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+    </select>
+    <button style="margin-top:1rem">Crear (genera contraseña temporal)</button>
+  </form>
+  <p style="font-size:0.85rem;color:var(--texto-suave)">Los usuarios nunca se borran, solo se desactivan:
+  sus movimientos registrados deben conservarse para auditoría.</p>
+</div>
+
+<div class="tarjeta" style="max-width:480px">
+  <h3 style="margin-top:0">Seguridad de sesiones</h3>
+  <form method="post" action="/usuarios/config" style="display:flex;gap:0.5rem;align-items:end">
+    <div style="flex:1">
+      <label>Cierre automático por inactividad (minutos, 5-120)</label>
+      <input name="minutos" value="{{ minutos }}" style="width:100%">
+    </div>
+    <button>Guardar</button>
+  </form>
+  <p style="font-size:0.85rem;color:var(--texto-suave)">Si nadie mueve el mouse ni teclea durante este
+  tiempo, la pantalla se cierra sola y regresa al inicio de sesión (con aviso 1 minuto
+  antes). Protege el sistema cuando el personal se ausenta por una emergencia.</p>
+</div>
+
+<div class="tarjeta" style="max-width:480px">
+  <h3 style="margin-top:0">Mantenimiento del inventario</h3>
+  <p style="font-size:0.9rem;color:var(--texto-suave)">Poner todas las existencias en cero
+  para arrancar limpio y capturar el conteo físico real. Conserva usuarios, productos e
+  historial; hace respaldo automático.</p>
+  <a class="btn" href="/mantenimiento/reset">Poner inventario en cero…</a>
+</div>
+{% endblock %}

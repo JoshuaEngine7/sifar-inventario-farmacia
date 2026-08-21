@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Captura{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h2 style="margin-top:0">Captura de movimientos — elegir producto</h2>
+  <form method="get" action="/captura" style="display:flex;gap:0.5rem">
+    <input name="q" value="{{ q }}" placeholder="Buscar producto (ej. amoxicilina)" style="flex:1" autofocus>
+    <button>Buscar</button>
+  </form>
+  {% if usuario.rol == 'admin' or usuario.puede_crear_productos %}
+  <p style="margin:0.6rem 0 0"><a class="btn" href="/productos/nuevo">+ Agregar producto nuevo</a>
+  <span style="color:var(--texto-suave);font-size:0.85rem">(para medicamento/material que llega por primera vez)</span></p>
+  {% elif q and not resultados %}
+  <p style="margin:0.6rem 0 0;color:var(--texto-suave)">¿No aparece? Pide al administrador darlo de alta
+  o que te otorgue el permiso de alta de productos.</p>
+  {% endif %}
+</div>
+{% if q %}
+<div class="tarjeta">
+  {% if resultados %}
+  <table>
+    <tr><th>Producto</th><th>Tipo</th><th>Ubicación</th><th>Unidad</th><th></th></tr>
+    {% for p in resultados %}
+    <tr>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.tipo.nombre }}</td>
+      <td>{{ p.ubicacion.nombre }}</td>
+      <td>{{ p.unidad }}</td>
+      <td><a href="/captura/{{ p.id }}">Capturar →</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p>Sin resultados para "{{ q }}".</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
