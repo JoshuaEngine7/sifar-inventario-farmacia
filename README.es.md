@@ -11,6 +11,8 @@ Aplicación web de inventario de farmacia construida para una clínica real de p
 
 > Este repositorio es una **copia sanitizada del código de producción**. La identidad de la institución, los usuarios reales y los datos de la clínica se reemplazaron por valores demo; la ingeniería está intacta. Todo lo visible en las capturas son datos de demostración generados.
 
+**▶ Demo en vivo:** [sifar-demo.azurewebsites.net](https://sifar-demo.azurewebsites.net) — entra como `Admin Demo` / `demo1234`. El arranque en frío del tier gratuito puede tardar ~1 min, y la base de datos se re-siembra sola en cada reinicio ([cómo está desplegada](docs/deploy_azure.md)).
+
 ![Inventario con semáforo de caducidad](docs/img/inventario.png)
 
 ## El problema

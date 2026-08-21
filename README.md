@@ -11,6 +11,8 @@ A pharmacy inventory web application built for a real primary-care clinic and **
 
 > This repository is a **sanitized copy of the production code**. Institution identity, real users and clinic data were replaced with demo values; the engineering is unchanged. Everything visible in the screenshots is generated demo data.
 
+**▶ Live demo:** [sifar-demo.azurewebsites.net](https://sifar-demo.azurewebsites.net) — sign in as `Admin Demo` / `demo1234`. Free-tier cold start can take ~1 min, and the database re-seeds itself on every restart ([how it's deployed](docs/deploy_azure.md)).
+
 ![Inventory with expiry traffic-light](docs/img/inventario.png)
 
 ## The problem
